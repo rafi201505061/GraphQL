@@ -284,3 +284,32 @@ query AuthorList($includeBooks: Boolean!) {
   }
 }
 ```
+- mutation
+> While query fields are executed in parallel, mutation fields run in series, one after the other.
+This means that if we send two incrementCredits mutations in one request, the first is guaranteed to finish before the second begins, ensuring that we don't end up with a race condition with ourselves.
+```
+addBook: {
+      type: Book,
+      args: {
+        name: { type: GraphQLString },
+        genre: { type: GraphQLString },
+        authorId: { type: GraphQLID },
+      },
+      resolve(parent, args) {
+        const book = new BookSchema({
+          name: args.name,
+          genre: args.genre,
+          authorId: args.authorId,
+        });
+        return book.save();
+      },
+    }
+  ```
+  ```
+  mutation addBook($name:String,$genre:String,$authorId:ID){
+  addBook(name:$name,genre:$genre,authorId:$authorId){
+    id
+  }
+}
+```
+> It adds a book and returns the id of the newly created book

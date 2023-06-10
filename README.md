@@ -226,3 +226,61 @@ query AuthorList {
   }
 }
 ```
+4. Fragments: To avoid repitattive work
+```
+query AuthorList {
+  #alias
+  aythor1: author(id: "6483e5673269950fc139310b") {
+    ...SameProps
+  }
+  author2: author(id: "6483e77ac2ecabdeff427980") {
+    ...SameProps
+    ageInDay:age(format: DAY)
+    
+  }
+}
+
+fragment SameProps on author{
+ 		id
+    name
+    age(format: YEAR)
+}
+```
+5. variables: By using variables, we can simply pass a different variable rather than needing to construct an entirely new query.
+```
+query AuthorList($id:ID) {
+   author(id: $id) {
+    id
+    name
+    age(format: YEAR)
+  }
+}
+```
+- definition: 
+```
+$var_name: type_of_variable
+```
+- required or not required: 
+```
+$var_name: type_of_variable! (! after type_of_variable indicates thar $var_name is required, can not be null)
+```
+- default value: 
+```
+$var_name: type_of_variable = default_value
+```
+6. Directives: Directives are used to conditionally include or skip some fields or fragements in query.
+There are two types of directives to manipulate the query,
+ - > *** @include(if: Boolean) *** Only include this field in the result if the argument is true.
+ - > *** @skip(if: Boolean) *** Skip this field if the argument is true.
+
+```
+query AuthorList($includeBooks: Boolean!) {
+  #alias
+  aythor1: author(id: "6483e5673269950fc139310b") {
+    ...SameProps
+    books @include (if: $includeBooks){
+      id
+    }
+  }
+}
+```

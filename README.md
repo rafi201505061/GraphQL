@@ -54,7 +54,7 @@ For example, a dashboard that fetches data from multiple sources such as logging
 Proxy pattern on client side; GraphQL can be added as an abstraction on an existing API, so that each end-user can specify response structure based on their needs.
 For example, clients can create a GraphQL specification according to their needs on common API provided by FireBase as a backend service.
 In this article, we examined how GraphQL is transforming the way apps are managed and why it’s the technology of the future. 
-Queries and Mutations
+# Queries and Mutations
 Format:
 ```
 operationType OperationName {
@@ -368,6 +368,140 @@ result:
         "name": "TIE Advanced x1"
       }
     ]
+  }
+}
+```
+# Schema: Most types in your schema will just be normal object types, but there are two types that are special within a schema 
+> i)query ii)mutation
+**Every GraphQL service has a query type and may or may not have a mutation type. These types are the same as a regular object type, but they are special because they define the entry point of every GraphQL query**
+# Types
+- scalar types: INT, FLOAT, STRING, BOOLEAN, ID, ENUM
+- Object type : {}
+- List: []
+- non null: !
+
+# Interfaces
+```
+interface Character {
+  id: ID!
+  name: String!
+  friends: [Character]
+  appearsIn: [Episode]!
+}
+type Human implements Character {
+  id: ID!
+  name: String!
+  friends: [Character]
+  appearsIn: [Episode]!
+  starships: [Starship]
+  totalCredits: Int
+}
+
+type Droid implements Character {
+  id: ID!
+  name: String!
+  friends: [Character]
+  appearsIn: [Episode]!
+  primaryFunction: String
+}
+```
+Following query produces an error,
+```
+query HeroForEpisode($ep: Episode!) {
+  hero(episode: $ep) {
+    name
+    primaryFunction
+  }
+}
+```
+> The hero field returns the type Character, which means it might be either a Human or a Droid depending on the episode argument. In the query above, you can only ask for fields that exist on the Character interface, which doesn't include primaryFunction.
+
+To ask for a field on a specific object type, you need to use an inline fragment:
+```
+query HeroForEpisode($ep: Episode!) {
+  hero(episode: $ep) {
+    name
+    ... on Droid {
+      primaryFunction
+    }
+  }
+}
+```
+# Union Types
+```
+union SearchResult = Human | Droid | Starship
+```
+> Note that members of a union type need to be concrete object types; you can't create a union type out of interfaces or other unions.
+In this case, if you query a field that returns the SearchResult union type, you need to use an inline fragment to be able to query any fields at all:
+```
+{
+  search(text: "an") {
+    __typename
+    ... on Human {
+      name
+      height
+    }
+    ... on Droid {
+      name
+      primaryFunction
+    }
+    ... on Starship {
+      name
+      length
+    }
+  }
+}
+Result: 
+{
+  "data": {
+    "search": [
+      {
+        "__typename": "Human",
+        "name": "Han Solo",
+        "height": 1.8
+      },
+      {
+        "__typename": "Human",
+        "name": "Leia Organa",
+        "height": 1.5
+      },
+      {
+        "__typename": "Starship",
+        "name": "TIE Advanced x1",
+        "length": 9.2
+      }
+    ]
+  }
+}
+```
+
+# Input Types
+you can also easily pass complex objects. This is particularly valuable in the case of mutations, where you might want to pass in a whole object to be created. In the GraphQL schema language, input types look exactly the same as regular object types, but with the keyword input instead of type
+```
+input ReviewInput {
+  stars: Int!
+  commentary: String
+}
+mutation CreateReviewForEpisode($ep: Episode!, $review: ReviewInput!) {
+  createReview(episode: $ep, review: $review) {
+    stars
+    commentary
+  }
+  vars:
+  {
+  "ep": "JEDI",
+  "review": {
+    "stars": 5,
+    "commentary": "This is a great movie!"
+  }
+}
+output: 
+{
+  "data": {
+    "createReview": {
+      "stars": 5,
+      "commentary": "This is a great movie!"
+    }
   }
 }
 ```

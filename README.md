@@ -505,3 +505,54 @@ output:
   }
 }
 ```
+# Query Validations:
+1. A fragment cannot refer to itself or create a cycle, as this could result in an unbounded result!
+```
+{
+  book(id:"6483e7be5dc1e0db0c773151") {
+    ...BookFragment
+  }
+}
+
+fragment BookFragment on book {
+  name
+  genre
+  author {
+    books{
+    	...BookFragment
+    }
+  }
+}
+```
+solution:
+```
+{
+  book(id: "6483e7be5dc1e0db0c773151") {
+    ...BookFragment
+    author {
+      books {
+        ...BookFragment
+      }
+    }
+  }
+}
+
+fragment BookFragment on Book {
+  name
+  genre
+}
+```
+2. When we query for fields, we have to query for a field that exists on the given type
+```
+{
+  book(id:"6483e7be5dc1e0db0c773151") {
+    favoriteSpaceship
+  }
+}
+```
+> it's invalid because book has no field named favoriteSpaceship
+3. Whenever we query for a field and it returns something other than a scalar or an enum, we need to specify what data we want to get back from the field.
+4. Similarly, if a field is a scalar, it doesn't make sense to query for additional fields on it, and doing so will make the query invalid.
+5. A query can only query for fields on the type in question.
+
+

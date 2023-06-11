@@ -555,4 +555,20 @@ fragment BookFragment on Book {
 4. Similarly, if a field is a scalar, it doesn't make sense to query for additional fields on it, and doing so will make the query invalid.
 5. A query can only query for fields on the type in question.
 
+# How queries are resolved
+Each field has a resolve function.
+```
+resolve(parent, args, context, obj)
+```
+- GraphQL starts resolving from the root query. 
+- Fields on the same level will be resolved concurrently. Exception: mutation queries, where fields will be resolved serially from top to bottom.
+- Higher level fields will get the resolved value from the immediate lower level field as **parent** in resolve functions.
+- If we don't provide a resolve function, GraphQL will provide a default implementation
+```
+field_name: resolve(parent, args, context, obj){
+return parent[field_name];
+}
+```
+
+
 
